@@ -1,12 +1,12 @@
-# NodeJS Google OAuth2.0 authentication for limited-input devices
+# NodeJS Google API authentication for limited-input devices
 
 Allows limited-input devices to authenticate with Google OAuth2. Uses could be a command-line service or applications running on a headless server.
 
-For detailed information on Google Limited Device Authorisation, see this article: https://developers.google.com/accounts/docs/OAuth2ForDevices
+For detailed information on Google Limited-Input Device Authorisation, see this article: https://developers.google.com/accounts/docs/OAuth2ForDevices
 
 ## Quick Example:
 
-```
+```javascript
 var GoogleDeviceAuth = require("google-device-auth");
 
 var deviceAuth = new GoogleDeviceAuth({
@@ -19,14 +19,17 @@ var deviceAuth = new GoogleDeviceAuth({
 
 deviceAuth.on(GoogleDeviceAuth.events.userCode, function(data) {
   //Present user code data to the user for authorization
+  console.log("Please visit this URL: ", data.verification_url, " and enter this code: ", data.user_code);
 });
 
 deviceAuth.on(GoogleDeviceAuth.events.authSuccess, function(data) {
   //Store response access token and refresh token for use with other libraries
+  console.log("Auth success! Access token: ", data.access_token);
 });
 
 deviceAuth.auth();
 ```
+
 
 
 ## API
@@ -46,7 +49,7 @@ Creates a new GoogleDeviceAuth instance with the specified options. Options may 
 
 Initiates an authentication request by requesting a user code from the Google OAuth API. On success, a `GoogleDeviceAuth.events.userCode` event will be emitted containing the URL and user code that should be presented to the user. See below for more information on user codes.
 
-Once the request has been authorised by the user, a token request will be sent and the result emitted by a `GoogleDeviceAuth.events.authSuccess` event. See below for information on event data.
+Once the request has been authorised by the user, a token request will be sent and the result emitted by a `GoogleDeviceAuth.events.authSuccess` event. See [Events](#events) for information on event data.
 
 
 ### GoogleDeviceAuth.refresh()
@@ -58,12 +61,18 @@ If the request fails due to an expired access_token, a new authentication reques
 On success a `GoogleDeviceAuth.events.refreshSuccess` event is emitted containing new access_token data.
 
 
+### GoogleDeviceAuth.authData
+
+Object containing retrived auth data. Before authentication is complete this object is empty. See the [Events](#events) section for information on what this object contains.
+
+
+
 ## Events
 
 * ####`GoogleDeviceAuth.events.userCode`:
   Emitted after an auth request is initiated. The data sent by this event contains the verification URL and code that need to be presented to the user. Here is an example of this object:
 
-    ```
+    ```json
     {
       "device_code" : "4/L9fTtLrhY96442SEuf1Rl3KLFg3y",
       "user_code" : "a9xfwk9c",
@@ -76,12 +85,12 @@ On success a `GoogleDeviceAuth.events.refreshSuccess` event is emitted containin
   The `user_code` and `verification_url` should be given to the user (e.g. printed to the console, emailed to someone) so they can authenticate the request. If this is not completed in `expires_in` seconds, the authentication request will fail and an error will be emitted.
 
 * ####`GoogleDeviceAuth.events.error`:
-  The error event is essential for understanding reasons for authentication failure. Application errors will be emitted as standard Error objects with an additional `code` parameter that can be used to determine the source of the problem, as well as a `data` parameter where relevant. Note that the errors are not always 'bad' and might simply mean that a new authentication attempt needs to take place, for example. For a full list of errors and their codes please see below.
+  The error event is essential for understanding reasons for authentication failure. Application errors will be emitted as standard Error objects with an additional `code` parameter that can be used to determine the source of the problem, as well as a `data` parameter where relevant. Note that the errors are not always 'bad' and might simply mean that a new authentication attempt needs to take place, for example. It is also possible to listen for specific errors, rather than a generic catchall. For a full list of errors and their usage, see [Errors](#errors).
 
 * ####`GoogleDeviceAuth.events.authSuccess`:
   Emitted on successful authentication. The data sent by this event contains important information such as the `access_token` and the `refresh_token` for use in your application. Here is an example of this object:
 
-    ```
+    ```json
     {
       "access_token" : "ya29.AHES6ZSuY8f6WFLswSv0HELP2J4cCvFSj-8GiZM0Pr6cgXU",
       "token_type" : "Bearer",
@@ -91,14 +100,14 @@ On success a `GoogleDeviceAuth.events.refreshSuccess` event is emitted containin
     }
     ```
 
-  When this event is emitted the `refresh_token` is automatically stored in the `options.refreshToken` parameter of the GoogleDeviceAuth instance so that the `GoogleDeviceAuth.refresh()` method can be used easily.
+  When this event is emitted the `refresh_token` is automatically stored in the `options.refreshToken` parameter of the GoogleDeviceAuth instance so that the `GoogleDeviceAuth.refresh()` method can be used easily. The entire data object is also stored in `GoogleDeviceAuth.authData`.
 
-  *Important note*: You should _permanently_ store the refresh token until it becomes invalid since this is the easiest way to get new access tokens. The Google OAuth system restricts the availability of refresh tokens so it is important to only request it when absolutely necessary.
+  *Important note*: You should _permanently_ store the refresh token until it becomes invalid since this is the easiest way to get new access tokens. The Google OAuth system restricts the availability of refresh tokens so it is important to only request it when absolutely necessary. For more information see [here](#access_token-and-refresh_token).
 
 * ####`GoogleDeviceAuth.events.refreshSuccess`:
   Emitted on successful access token refresh. An example of the data sent by this event:
 
-    ```
+    ```json
     {
       "access_token" : "ya29.AHES6ZSuY8f6WFLswSv0HELP2J4cCvFSj-8GiZM0Pr6cgXU",
       "token_type" : "Bearer",
@@ -108,6 +117,7 @@ On success a `GoogleDeviceAuth.events.refreshSuccess` event is emitted containin
     ```
 
   Note that if a refresh request fails, an authentication request will automatically be sent unless `options.autoAttemptReAuth` is false (true by default)
+
 
 
 ## Errors
@@ -120,19 +130,42 @@ Errors emitted by GoogleDeviceAuth are designed to be as precise as possible, al
 * `missing_refresh_token`: Missing refresh token in options
 * `authorization_timeout`: User did not authorize in time
 * `google_error`: Error returned from Google Auth
-* `no_user_code`: Unable to poll endpoint - no usercode data
+* `no_user_code`: Unable to poll for user verification - no usercode data
 * `invalid_refresh_token`: Invalid refresh token provided
 
-Example of checking for a specific error:
+Example of checking for a specific error inside the generic error catchall:
 
-```
-deviceAuth.on(GoogleDeviceAuth.error, function(err) {
+```javascript
+deviceAuth.on(GoogleDeviceAuth.events.error, function(err) {
   if (err.code == "authorization_timeout") {
     console.log("You failed to authorize the request in time! Please try again...");
     deviceAuth.auth();
   }
 });
 ```
+
+### Alternative Syntax
+You can also listen for specific error events if you prefer e.g.
+
+```javascript
+deviceAuth.on(GoogleDeviceAuth.events.errors.authorizationTimeout, function(err) {
+  console.log("You failed to authorize the request in time! Please try again...");
+  deviceAuth.auth();
+});
+```
+
+
+
+## `access_token` and `refresh_token`
+
+The `access_token` and `refresh_token` are the most important pieces of information returned by the API. Using them correctly is essential for reliable use of Google APIs.
+
+* #### `access_token`
+This is used by your application to authenticate with Google APIs. It is only valid for a certain time period (specified by the `expires_in` parameter) and can be refreshed using the `refresh_token`. It is not overly important if this token is not kept in permanent storage.
+
+* #### `refresh_token`
+The refresh token is used to generate a new `access_token` without having to go through the whole user validation process again. It is very important to keep this in permanent storage since Google restricts the availability of refresh tokens. In an ideal world you should only ever request one refresh token per user per application lifetime, and should only re-request if the current refresh token becomes invalid (e.g. the user deleted it).
+
 
 
 ## Scopes
