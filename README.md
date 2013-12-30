@@ -168,6 +168,15 @@ The refresh token is used to generate a new `access_token` without having to go 
 
 
 
+## Advice on guaranteeing valid access tokens
+
+Where possible you should design your application so that it gracefully recovers if it sends a request using an expired/invalid access token. Due to the de-coupled nature of OAuth it is very hard to precisely guarantee the validity of an access token at every single point in time. For example, you may retrieve a cached access token using this library, however by the time you come to use it in your application it may have already been invalidated. The best way to handle this is make your application catch authentication errors from the Google API you are using and then re-request an access token when this happens.
+If you absolutely need to 100% guarantee the validity of an access token before you use it, I would advise polling the refresh function using a value less than the `expires_in` parameter that is returned by the authSuccess and refreshSuccess events.
+
+
+
+
+
 ## Scopes
 
 Scopes tell the user which Google APIs you are requesting access to and in what form (e.g. readonly). There is no definitive list of all possible scopes. Instead, you have to find them from the Google Discovery API, which can be found here: https://developers.google.com/discovery/v1/getting_started
