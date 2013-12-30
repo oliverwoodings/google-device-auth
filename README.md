@@ -1,5 +1,7 @@
 # NodeJS Google API authentication for limited-input devices
 
+[![NPM version](https://badge.fury.io/js/google-device-auth.png)](http://badge.fury.io/js/google-device-auth)
+
 Allows limited-input devices to authenticate with Google OAuth2. Uses could be a command-line service or applications running on a headless server.
 
 For detailed information on Google Limited-Input Device Authorisation, see this article: https://developers.google.com/accounts/docs/OAuth2ForDevices
