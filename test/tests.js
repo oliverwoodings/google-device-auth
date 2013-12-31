@@ -230,6 +230,17 @@ describe("Poll response handler", function() {
     });
   });
 
+  it("should emit a newAccessToken event on success", function(done) {
+    var auth = this.auth;
+    auth.on(GoogleDeviceAuth.events.newAccessToken, function(data) {
+      expect(data.access_token).to.equal("test");
+      done();
+    });
+    auth._handlePollResponse({
+      access_token: "test"
+    });
+  });
+
 });
 
 describe("Refresh method", function() {
@@ -272,6 +283,18 @@ describe("Refresh response handler", function() {
   it("should emit refresh success on success", function(done) {
     var auth = this.auth;
     auth.on(GoogleDeviceAuth.events.refreshSuccess, function(data) {
+      expect(data.access_token).to.equal("test");
+      done();
+    });
+    auth._handleRefreshResponse({
+      access_token: "test"
+    });
+    auth.refresh();
+  });
+
+  it("should emit newAccessToken on success", function(done) {
+    var auth = this.auth;
+    auth.on(GoogleDeviceAuth.events.newAccessToken, function(data) {
       expect(data.access_token).to.equal("test");
       done();
     });

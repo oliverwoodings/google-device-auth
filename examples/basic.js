@@ -14,7 +14,7 @@ deviceAuth.on(GoogleDeviceAuth.events.userCode, function(data) {
   console.log("Please visit this URL: ", data.verification_url, " and enter this code: ", data.user_code);
 });
 
-deviceAuth.on(GoogleDeviceAuth.events.authSuccess, function(data) {
+deviceAuth.on(GoogleDeviceAuth.events.newAccessToken, function(data) {
   console.log("Auth success! Access token: ", data.access_token);
 });
 
