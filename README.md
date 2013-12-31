@@ -120,6 +120,9 @@ Object containing retrived auth data. Before authentication is complete this obj
 
   Note that if a refresh request fails, an authentication request will automatically be sent unless `options.autoAttemptReAuth` is false (true by default)
 
+* ####`GoogleDeviceAuth.events.newAccessToken`;
+  Emitted whenever a new access token is retrieved. The data sent by this will be the same as either an authSuccess or a refreshSuccess event. It is really just sugar for listening on both events, however it means you can do `deviceAuth.once(GoogleDeviceAuth.events.newAccessToken, function(data) {});` to create a one-off listener for an access token.
+
 
 
 ## Errors
@@ -185,3 +188,5 @@ Scopes tell the user which Google APIs you are requesting access to and in what 
 
 The Discovery API contains information about all the different Google APIs. For example, to list all the available APIs you can go here: https://www.googleapis.com/discovery/v1/apis
 If I wanted to find out the scope for the Google Drive v2 API, I would go here: https://www.googleapis.com/discovery/v1/apis/drive/v2/rest and then look for the `scopes` object/array.
+
+*Important:* not all scopes work with the device auth flow! If you keep getting an invalid scope error even though you have provided one that should work, it is most likely a scope that is not enabled by Google. In this instance you would need to use some other auth method.
