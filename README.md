@@ -189,4 +189,4 @@ Scopes tell the user which Google APIs you are requesting access to and in what 
 The Discovery API contains information about all the different Google APIs. For example, to list all the available APIs you can go here: https://www.googleapis.com/discovery/v1/apis
 If I wanted to find out the scope for the Google Drive v2 API, I would go here: https://www.googleapis.com/discovery/v1/apis/drive/v2/rest and then look for the `scopes` object/array.
 
-*Important:* not all scopes work with the device auth flow! If you keep getting an invalid scope error even though you have provided one that should work, it is most likely a scope that is not enabled by Google. In this instance you would need to use some other auth method.
+*Important:* not all scopes work with the device auth flow! If you keep getting an invalid scope error even though you have provided one that should work, it is most likely a scope that is not enabled by Google. In this instance you would need to use some other auth method. You can find a list of allowed scopes here: https://developers.google.com/identity/protocols/OAuth2ForDevices?hl=en#allowedscopes
