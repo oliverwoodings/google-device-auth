@@ -2,7 +2,7 @@
   "author": "Oliver Wooodings",
   "name": "google-device-auth",
   "description": "Node library for authenticating limited-input devices with Google APIs",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "homepage": "https://github.com/oliverwoodings/node-google-device-auth",
   "repository": {
     "type": "git",
